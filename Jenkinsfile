@@ -12,7 +12,6 @@ pipeline {
 
     stage('Checkout') {
       steps {
-        // Explicitly specify the default branch 'main'
         git branch: 'main', url: 'https://github.com/yogeshakn1k95/dev-project.git'
       }
     }
@@ -26,7 +25,6 @@ pipeline {
 
     stage('Push to ECR') {
       steps {
-        // Inject AWS credentials stored in Jenkins
         withCredentials([usernamePassword(
           credentialsId: 'aws-credentials', 
           usernameVariable: 'AWS_ACCESS_KEY_ID', 
@@ -38,12 +36,12 @@ pipeline {
             docker login --username AWS --password-stdin $ECR_URL
 
           echo "Pushing backend image..."
-          docker tag backend $ECR_URL/backend:latest
-          docker push $ECR_URL/backend:latest
+          docker tag backend $ECR_URL:backend
+          docker push $ECR_URL:backend
 
           echo "Pushing frontend image..."
-          docker tag frontend $ECR_URL/frontend:latest
-          docker push $ECR_URL/frontend:latest
+          docker tag frontend $ECR_URL:frontend
+          docker push $ECR_URL:frontend
           '''
         }
       }
