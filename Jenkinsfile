@@ -3,6 +3,9 @@ pipeline {
 
   environment {
     ECR_URL = "280362093954.dkr.ecr.ap-south-1.amazonaws.com/dev-project"
+    AWS_REGION = "ap-south-1"
+    CLUSTER_NAME = "your-eks-cluster-name" // replace with your EKS cluster name
+    K8S_NAMESPACE = "default"
   }
 
   stages {
@@ -23,21 +26,44 @@ pipeline {
 
     stage('Push to ECR') {
       steps {
-        sh '''
-        aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $ECR_URL
+        // Inject AWS credentials stored in Jenkins
+        withCredentials([usernamePassword(
+          credentialsId: 'aws-credentials', 
+          usernameVariable: 'AWS_ACCESS_KEY_ID', 
+          passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+        )]) {
+          sh '''
+          echo "Logging in to ECR..."
+          aws ecr get-login-password --region $AWS_REGION | \
+            docker login --username AWS --password-stdin $ECR_URL
 
-        docker tag backend $ECR_URL/backend:latest
-        docker push $ECR_URL/backend:latest
+          echo "Pushing backend image..."
+          docker tag backend $ECR_URL/backend:latest
+          docker push $ECR_URL/backend:latest
 
-        docker tag frontend $ECR_URL/frontend:latest
-        docker push $ECR_URL/frontend:latest
-        '''
+          echo "Pushing frontend image..."
+          docker tag frontend $ECR_URL/frontend:latest
+          docker push $ECR_URL/frontend:latest
+          '''
+        }
       }
     }
 
     stage('Deploy to EKS') {
       steps {
-        sh 'kubectl apply -f k8s/'
+        withCredentials([usernamePassword(
+          credentialsId: 'aws-credentials', 
+          usernameVariable: 'AWS_ACCESS_KEY_ID', 
+          passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+        )]) {
+          sh '''
+          echo "Updating kubeconfig for EKS..."
+          aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
+
+          echo "Deploying to EKS..."
+          kubectl apply -f k8s/ --namespace $K8S_NAMESPACE
+          '''
+        }
       }
     }
 
