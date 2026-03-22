@@ -4,7 +4,7 @@ pipeline {
   environment {
     ECR_URL = "280362093954.dkr.ecr.ap-south-1.amazonaws.com/dev-project"
     AWS_REGION = "ap-south-1"
-    CLUSTER_NAME = "your-eks-cluster-name" // replace with your EKS cluster name
+    CLUSTER_NAME = "devops-cluster // eks cluster name
     K8S_NAMESPACE = "default"
   }
 
