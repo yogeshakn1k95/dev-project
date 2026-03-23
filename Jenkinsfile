@@ -4,7 +4,7 @@ pipeline {
   environment {
     ECR_URL = "280362093954.dkr.ecr.ap-south-1.amazonaws.com/dev-project"
     AWS_REGION = "ap-south-1"
-    CLUSTER_NAME = "devops-cluster" // eks cluster name
+    CLUSTER_NAME = "devops-cluster"
     K8S_NAMESPACE = "default"
   }
 
@@ -25,12 +25,13 @@ pipeline {
 
     stage('Push to ECR') {
       steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'aws-credentials', 
-          usernameVariable: 'AWS_ACCESS_KEY_ID', 
-          passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-        )]) {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+          credentialsId: 'aws-credentials'
+        ]]) {
           sh '''
+          echo "DEBUG: AWS Identity"
+          aws sts get-caller-identity
+
           echo "Logging in to ECR..."
           aws ecr get-login-password --region $AWS_REGION | \
             docker login --username AWS --password-stdin $ECR_URL
@@ -49,12 +50,13 @@ pipeline {
 
     stage('Deploy to EKS') {
       steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'aws-credentials', 
-          usernameVariable: 'AWS_ACCESS_KEY_ID', 
-          passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-        )]) {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+          credentialsId: 'aws-credentials'
+        ]]) {
           sh '''
+          echo "DEBUG: AWS Identity"
+          aws sts get-caller-identity
+
           echo "Updating kubeconfig for EKS..."
           aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
 
