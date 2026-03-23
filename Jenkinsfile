@@ -34,8 +34,8 @@ pipeline {
                     credentialsId: 'aws-credentials'
                 ]]) {
                     sh '''
-                    aws ecr get-login-password --region $AWS_REGION \
-                    | docker login --username AWS --password-stdin $ECR_URL
+                    aws ecr get-login-password --region $AWS_REGION | \
+                    docker login --username AWS --password-stdin $ECR_URL
                     '''
                 }
             }
@@ -69,10 +69,15 @@ pipeline {
 
         stage('Deploy to EKS') {
             steps {
-                sh '''
-                kubectl apply -f k8s/backend-deployment.yaml
-                kubectl apply -f k8s/backend-service.yaml
-                '''
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-credentials'
+                ]]) {
+                    sh '''
+                    kubectl apply -f k8s/backend-deployment.yaml
+                    kubectl apply -f k8s/backend-service.yaml
+                    '''
+                }
             }
         }
 
@@ -87,7 +92,6 @@ pipeline {
         }
     }
 }
-
 // OR
 
 // pipeline {
