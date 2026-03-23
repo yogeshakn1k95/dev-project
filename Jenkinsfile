@@ -23,7 +23,7 @@ pipeline {
 
         stage('Tag Image') {
             steps {
-                sh 'docker tag backend $ECR_URL/backend:latest'
+                sh 'docker tag backend $ECR_URL:latest'
             }
         }
 
@@ -47,7 +47,7 @@ pipeline {
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-credentials'
                 ]]) {
-                    sh 'docker push $ECR_URL/backend:latest'
+                    sh 'docker push $ECR_URL:latest'
                 }
             }
         }
@@ -87,6 +87,98 @@ pipeline {
         }
     }
 }
+
+// OR
+
+// pipeline {
+//     agent any
+
+//     environment {
+//         AWS_REGION = "ap-south-1"
+//         ECR_URL = "280362093954.dkr.ecr.ap-south-1.amazonaws.com/dev-project"
+//         CLUSTER_NAME = "devops-cluster"
+//     }
+
+//     stages {
+
+//         stage('Checkout') {
+//             steps {
+//                 git branch: 'main', url: 'https://github.com/yogeshakn1k95/dev-project.git'
+//             }
+//         }
+
+//         stage('Build Docker Image') {
+//             steps {
+//                 sh 'docker build -t backend ./app/backend'
+//             }
+//         }
+
+//         stage('Tag Image') {
+//             steps {
+//                 sh 'docker tag backend $ECR_URL/backend:latest'
+//             }
+//         }
+
+//         stage('Login to ECR') {
+//             steps {
+//                 withCredentials([[
+//                     $class: 'AmazonWebServicesCredentialsBinding',
+//                     credentialsId: 'aws-credentials'
+//                 ]]) {
+//                     sh '''
+//                     aws ecr get-login-password --region $AWS_REGION \
+//                     | docker login --username AWS --password-stdin $ECR_URL
+//                     '''
+//                 }
+//             }
+//         }
+
+//         stage('Push to ECR') {
+//             steps {
+//                 withCredentials([[
+//                     $class: 'AmazonWebServicesCredentialsBinding',
+//                     credentialsId: 'aws-credentials'
+//                 ]]) {
+//                     sh 'docker push $ECR_URL/backend:latest'
+//                 }
+//             }
+//         }
+
+//         stage('Update kubeconfig') {
+//             steps {
+//                 withCredentials([[
+//                     $class: 'AmazonWebServicesCredentialsBinding',
+//                     credentialsId: 'aws-credentials'
+//                 ]]) {
+//                     sh '''
+//                     aws eks update-kubeconfig \
+//                     --region $AWS_REGION \
+//                     --name $CLUSTER_NAME
+//                     '''
+//                 }
+//             }
+//         }
+
+//         stage('Deploy to EKS') {
+//             steps {
+//                 sh '''
+//                 kubectl apply -f k8s/backend-deployment.yaml
+//                 kubectl apply -f k8s/backend-service.yaml
+//                 '''
+//             }
+//         }
+
+//     }
+
+//     post {
+//         success {
+//             echo "Deployment Successful 🚀"
+//         }
+//         failure {
+//             echo "Deployment Failed ❌"
+//         }
+//     }
+// }
 
 // OR
 
