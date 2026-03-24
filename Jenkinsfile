@@ -84,7 +84,7 @@ pipeline {
 
             kubectl get nodes
 
-            cd $WORKSPACE
+            // cd $WORKSPACE
             
             kubectl apply -f k8s/backend-deployment.yaml
             kubectl apply -f k8s/backend-service.yaml
