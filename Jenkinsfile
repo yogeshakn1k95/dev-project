@@ -94,7 +94,7 @@ pipeline {
 // }
 stage('Deploy to EKS') {
     steps {
-        withCredentials([string(credentialsId: 'eks-kubeconfig-secret', variable: 'KUBECONFIG_CONTENT')]) {
+        withCredentials([string(credentialsId: 'eks-kubeconfig-secrets', variable: 'KUBECONFIG_CONTENT')]) {
             sh '''
             # Create a kubeconfig file in workspace
             mkdir -p $WORKSPACE/.kube
