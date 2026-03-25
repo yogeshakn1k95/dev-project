@@ -67,32 +67,52 @@ pipeline {
             }
         }
 
-        stage('Deploy to EKS') {
+//         stage('Deploy to EKS') {
+//     steps {
+//         withCredentials([[
+//             $class: 'AmazonWebServicesCredentialsBinding',
+//             credentialsId: 'aws-credentials'
+//         ]]) {
+//             sh '''
+//             export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+//             export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+//             export AWS_DEFAULT_REGION=$AWS_REGION
+
+//             aws eks update-kubeconfig \
+//             --region $AWS_REGION \
+//             --name $CLUSTER_NAME
+
+//             kubectl get nodes
+
+// // cd $WORKSPACE
+            
+//             kubectl apply -f k8s/backend-deployment.yaml
+//             kubectl apply -f k8s/backend-service.yaml
+//             '''
+//         }
+//     }
+// }
+stage('Deploy to EKS') {
     steps {
         withCredentials([[
             $class: 'AmazonWebServicesCredentialsBinding',
             credentialsId: 'aws-credentials'
         ]]) {
             sh '''
-            export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-            export AWS_DEFAULT_REGION=$AWS_REGION
-
+            mkdir -p $WORKSPACE/.kube
             aws eks update-kubeconfig \
-            --region $AWS_REGION \
-            --name $CLUSTER_NAME
+                --region $AWS_REGION \
+                --name $CLUSTER_NAME \
+                --kubeconfig $WORKSPACE/.kube/config
+            export KUBECONFIG=$WORKSPACE/.kube/config
 
             kubectl get nodes
-
-// cd $WORKSPACE
-            
             kubectl apply -f k8s/backend-deployment.yaml
             kubectl apply -f k8s/backend-service.yaml
             '''
         }
     }
 }
-
     }
 
     post {
