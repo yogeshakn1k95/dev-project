@@ -94,19 +94,17 @@ pipeline {
 // }
 stage('Deploy to EKS') {
     steps {
-        withCredentials([[
-            $class: 'AmazonWebServicesCredentialsBinding',
-            credentialsId: 'aws-credentials'
-        ]]) {
+        withCredentials([string(credentialsId: 'eks-kubeconfig-secret', variable: 'KUBECONFIG_CONTENT')]) {
             sh '''
+            # Create a kubeconfig file in workspace
             mkdir -p $WORKSPACE/.kube
-            aws eks update-kubeconfig \
-                --region $AWS_REGION \
-                --name $CLUSTER_NAME \
-                --kubeconfig $WORKSPACE/.kube/config
+            echo "$KUBECONFIG_CONTENT" > $WORKSPACE/.kube/config
             export KUBECONFIG=$WORKSPACE/.kube/config
 
+            # Test kubectl
             kubectl get nodes
+
+            # Apply manifests
             kubectl apply -f k8s/backend-deployment.yaml
             kubectl apply -f k8s/backend-service.yaml
             '''
