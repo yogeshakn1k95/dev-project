@@ -94,17 +94,16 @@ pipeline {
 // }
 stage('Deploy to EKS') {
     steps {
-        withCredentials([string(credentialsId: 'eks-kubeconfig-secrets', variable: 'KUBECONFIG_CONTENT')]) {
+        // Use 'file' instead of 'string' for Secret File credentials
+        withCredentials([file(credentialsId: 'eks-kubeconfig-secrets', variable: 'KUBECONFIG_FILE')]) {
             sh '''
-            # Create a kubeconfig file in workspace
-            mkdir -p $WORKSPACE/.kube
-            echo "$KUBECONFIG_CONTENT" > $WORKSPACE/.kube/config
-            export KUBECONFIG=$WORKSPACE/.kube/config
+            # Export the kubeconfig file path
+            export KUBECONFIG=$KUBECONFIG_FILE
 
-            # Test kubectl
+            # Test kubectl connectivity
             kubectl get nodes
 
-            # Apply manifests
+            # Apply Kubernetes manifests
             kubectl apply -f k8s/backend-deployment.yaml
             kubectl apply -f k8s/backend-service.yaml
             '''
