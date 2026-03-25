@@ -94,16 +94,17 @@ pipeline {
 // }
 stage('Deploy to EKS') {
     steps {
-        // Use 'file' instead of 'string' for Secret File credentials
-        withCredentials([file(credentialsId: 'eks-kubeconfig-secrets', variable: 'KUBECONFIG_FILE')]) {
+        withCredentials([
+            file(credentialsId: 'eks-kubeconfig-secrets', variable: 'KUBECONFIG_FILE'),
+            [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']
+        ]) {
             sh '''
-            # Export the kubeconfig file path
             export KUBECONFIG=$KUBECONFIG_FILE
 
-            # Test kubectl connectivity
+            # Test kubectl
             kubectl get nodes
 
-            # Apply Kubernetes manifests
+            # Deploy manifests
             kubectl apply -f k8s/backend-deployment.yaml
             kubectl apply -f k8s/backend-service.yaml
             '''
