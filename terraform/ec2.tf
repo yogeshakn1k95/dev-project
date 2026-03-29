@@ -51,7 +51,7 @@ resource "aws_instance" "ansible" {
 # -----------------------------
 resource "aws_instance" "jenkins" {
   ami           = "ami-05d2d839d4f73aafb"
-  instance_type = "t2.micro"
+  instance_type = "t3.medium"
 
   subnet_id              = module.vpc.public_subnets[0]
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
