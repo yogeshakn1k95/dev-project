@@ -1,3 +1,9 @@
 variable "alert_email" {
-  default = "yogeshakn1k95@gmail.com"
+  description = "Email address for SNS alerts"
+  type        = string
+}
+
+variable "node_group_name" {
+  description = "EKS node group Auto Scaling group name"
+  type        = string
 }
